@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"net/url"
 	"encoding/json"
+	"io/ioutil"
 
 	"github.com/gocolly/colly"
 )
@@ -19,7 +20,7 @@ type body struct {
 
 type bodys []*body
 
-func scraping() {
+func Scraping() {
 	bodys := bodys{}
 
 	c := colly.NewCollector()
