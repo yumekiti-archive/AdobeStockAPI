@@ -13,12 +13,12 @@ import (
 )
 
 type Body struct {
-	name string
-	number string
-	path string
+	Name string
+	Number string
+	Path string
 }
 
-type Bodys []Body
+type Bodys []*Body
 
 func Scraping() {
 	bodys := Bodys{}
@@ -42,7 +42,6 @@ func Scraping() {
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		// 以下の条件を満たす場合はスキップする
 		if !strings.Contains(e.Attr("href"), ".") { return }
-		if !strings.Contains(e.Attr("href"), "229944361") { return }
 
 		// URLをデコードする
 		u, err := url.QueryUnescape(e.Request.URL.String())
@@ -55,10 +54,10 @@ func Scraping() {
 		number := re.FindString(e.Attr("href"))
 
 		// 構造体に格納する
-		body := Body{
-			number: number,
-			name: e.Attr("href"),
-			path: u,
+		body := &Body{
+			Name: e.Attr("href"),
+			Number: number,
+			Path: u,
 		}
 		bodys = append(bodys, body)
 
