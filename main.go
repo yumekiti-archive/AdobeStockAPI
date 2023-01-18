@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"io/ioutil"
 	"log"
-	
+
 	"github.com/labstack/echo/v4"
 )
 
@@ -13,9 +13,9 @@ func main() {
 
 	// jsonを返す
 	e.GET("/", func(c echo.Context) error {
-		jsonFile, err := ioutil.ReadFile("links.json")
+		jsonFile, err := ioutil.ReadFile("info.json")
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 
 		return c.String(http.StatusOK, string(jsonFile))
