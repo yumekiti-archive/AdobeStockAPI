@@ -1,13 +1,13 @@
-package main
+package config
 
 import (
-	"fmt"
 	"strings"
 	"log"
 	"regexp"
 	"net/url"
 	"encoding/json"
 	"io/ioutil"
+	"time"
 
 	"github.com/gocolly/colly"
 )
@@ -16,16 +16,18 @@ type Body struct {
 	Name string
 	Number string
 	Path string
+	Tag string
 }
 
 type Bodys []*Body
 
-func Scraping() {
+func Scraping(targetHost string) {
+	start := time.Now()
 	bodys := Bodys{}
 
 	c := colly.NewCollector()
 
-	path := strings.Split("http://10.201.10.133/0配布用サーバ/_AdobeStock/", "/")
+	path := strings.Split(targetHost, "/")
 	previous := strings.ToLower(url.QueryEscape(path[len(path) - 3]))
 
 	// Find and visit all links
@@ -53,19 +55,20 @@ func Scraping() {
 		re := regexp.MustCompile(`[0-9]+`)
 		number := re.FindString(e.Attr("href"))
 
+		// _adobeStockの次の文字列を抽出する
+		tag := strings.Split(e.Attr("href"), "/")[3]
+
 		// 構造体に格納する
 		body := &Body{
 			Name: e.Attr("href"),
 			Number: number,
 			Path: u,
+			Tag: tag,
 		}
 		bodys = append(bodys, body)
-
-		fmt.Println(body)
 	})
 
-	// c.Visit("http://example/0配布用サーバ/_AdobeStock/")
-	c.Visit("http://10.201.10.133/0配布用サーバ/_AdobeStock/")
+	c.Visit(targetHost)
 
 	// --- ここからjsonに変換する処理 ---
 	jsonData, err := json.MarshalIndent(bodys, "", "  ")
@@ -77,4 +80,8 @@ func Scraping() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// timeを出力する
+	elapsed := time.Since(start)
+	log.Printf("Scraping took %s", elapsed)
 }

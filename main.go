@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/labstack/echo/v4"
+	"AdobeStockAPI/config"
 )
 
 func main() {
@@ -23,9 +24,9 @@ func main() {
 
 	// スクレイピングを再実行する
 	e.GET("/scrape", func(c echo.Context) error {
-		Scraping()
+		config.Scraping(config.GetEnv("TARGETHOST", "http://localhost"))
 		return c.String(http.StatusOK, "success")
 	})
 
-	e.Logger.Fatal(e.Start(":1323"))
+	e.Logger.Fatal(e.Start(":" + config.GetEnv("PORT", "1323")))
 }
