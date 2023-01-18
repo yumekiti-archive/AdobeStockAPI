@@ -12,16 +12,16 @@ import (
 	"github.com/gocolly/colly"
 )
 
-type body struct {
+type Body struct {
 	name string
 	number string
 	path string
 }
 
-type bodys []*body
+type Bodys []Body
 
 func Scraping() {
-	bodys := bodys{}
+	bodys := Bodys{}
 
 	c := colly.NewCollector()
 
@@ -30,14 +30,19 @@ func Scraping() {
 
 	// Find and visit all links
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
+		// 以下の条件を満たす場合はスキップする
 		if strings.Contains(e.Attr("href"), previous) { return }
 		if strings.Contains(e.Attr("href"), "http") { return }
 		if !strings.Contains(e.Attr("href"), "/") { return }
+
+		// リンクをたどる
 		e.Request.Visit(e.Attr("href"))
 	})
-
+	
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
+		// 以下の条件を満たす場合はスキップする
 		if !strings.Contains(e.Attr("href"), ".") { return }
+		if !strings.Contains(e.Attr("href"), "229944361") { return }
 
 		// URLをデコードする
 		u, err := url.QueryUnescape(e.Request.URL.String())
@@ -50,7 +55,7 @@ func Scraping() {
 		number := re.FindString(e.Attr("href"))
 
 		// 構造体に格納する
-		body := &body{
+		body := Body{
 			number: number,
 			name: e.Attr("href"),
 			path: u,
@@ -66,11 +71,11 @@ func Scraping() {
 	// --- ここからjsonに変換する処理 ---
 	jsonData, err := json.MarshalIndent(bodys, "", "  ")
 	if err != nil {
-			log.Println(err)
+		log.Fatal(err)
 	}
 
 	err = ioutil.WriteFile("info.json", jsonData, 0644)
 	if err != nil {
-			log.Println(err)
+		log.Fatal(err)
 	}
 }
