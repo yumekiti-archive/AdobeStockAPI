@@ -6,3 +6,5 @@ type Body struct {
 	Path   string
 	Tag    string
 }
+
+type Bodies []*Body

@@ -1,8 +1,6 @@
 package config
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"log"
 	"net/url"
 	"regexp"
@@ -13,10 +11,10 @@ import (
 	"AdobeStockAPI/domain"
 )
 
-type Bodys []*domain.Body
-
-func Scraping(targetHost string) Bodys {
-	bodys := Bodys{}
+// 2023/01/18 16:25:08 Scraping took 4m24.452563285s
+// 2023/01/18 16:54:58 Scraping took 24.863113706s
+func Scraping(targetHost string) domain.Bodies {
+	bodies := domain.Bodies{}
 
 	c := colly.NewCollector()
 
@@ -57,7 +55,7 @@ func Scraping(targetHost string) Bodys {
 		number := re.FindString(e.Attr("href"))
 
 		// _adobeStockの次の文字列を抽出する
-		tag := strings.Split(u, "/")[3]
+		tag := strings.Split(u, "/")[5]
 
 		// 構造体に格納する
 		body := &domain.Body{
@@ -66,21 +64,14 @@ func Scraping(targetHost string) Bodys {
 			Path:   u,
 			Tag:    tag,
 		}
-		bodys = append(bodys, body)
+		bodies = append(bodies, body)
 	})
 
 	c.Visit(targetHost)
 
-	// --- ここからjsonに変換する処理 ---
-	jsonData, err := json.MarshalIndent(bodys, "", "  ")
-	if err != nil {
-		log.Fatal(err)
+	if (len(bodies)) == 0 {
+		log.Fatal("No data was found")
 	}
 
-	err = ioutil.WriteFile("info.json", jsonData, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return bodys
+	return bodies
 }
