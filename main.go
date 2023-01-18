@@ -30,6 +30,10 @@ func main() {
 		start := time.Now()
 		bodies := config.Scraping(config.GetEnv("TARGETHOST", ""))
 
+		// ドロップしてから作成
+		db.Migrator().DropTable(&domain.Body{})
+		db.AutoMigrate(&domain.Body{})
+
 		tx := db.Begin()
 		for _, body := range bodies {
 			if err := tx.Create(&body).Error; err != nil {
