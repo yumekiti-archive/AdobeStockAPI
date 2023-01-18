@@ -1,31 +1,35 @@
 package main
 
 import (
-	"net/http"
-	"io/ioutil"
 	"log"
+	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
+
 	"AdobeStockAPI/config"
+	"AdobeStockAPI/domain"
 )
 
 func main() {
 	e := echo.New()
+	db := config.NewDB()
 
-	// jsonを返す
 	e.GET("/", func(c echo.Context) error {
-		jsonFile, err := ioutil.ReadFile("info.json")
-		if err != nil {
-			log.Println(err)
-		}
-
-		return c.String(http.StatusOK, string(jsonFile))
+		bodys := []domain.Body{}
+		db.Find(&bodys)
+		return c.JSON(http.StatusOK, bodys)
 	})
 
-	// スクレイピングを再実行する
+	// スクレイピングを実行する
 	e.GET("/scrape", func(c echo.Context) error {
-		config.Scraping(config.GetEnv("TARGETHOST", "http://localhost"))
-		return c.String(http.StatusOK, "success")
+		start := time.Now()
+		bodys := config.Scraping(config.GetEnv("TARGETHOST", "http://localhost"))
+		db.Create(&bodys)
+
+		elapsed := time.Since(start)
+		log.Printf("Scraping took %s", elapsed)
+		return c.String(http.StatusOK, `{"message": "Scraping took `+elapsed.String()+`", "status": "success"}`)
 	})
 
 	e.Logger.Fatal(e.Start(":" + config.GetEnv("PORT", "1323")))
