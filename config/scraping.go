@@ -1,49 +1,50 @@
 package config
 
 import (
-	"strings"
-	"log"
-	"regexp"
-	"net/url"
 	"encoding/json"
 	"io/ioutil"
-	"time"
+	"log"
+	"net/url"
+	"regexp"
+	"strings"
 
 	"github.com/gocolly/colly"
+
+	"AdobeStockAPI/domain"
 )
 
-type Body struct {
-	Name string
-	Number string
-	Path string
-	Tag string
-}
+type Bodys []*domain.Body
 
-type Bodys []*Body
-
-func Scraping(targetHost string) {
-	start := time.Now()
+func Scraping(targetHost string) Bodys {
 	bodys := Bodys{}
 
 	c := colly.NewCollector()
 
 	path := strings.Split(targetHost, "/")
-	previous := strings.ToLower(url.QueryEscape(path[len(path) - 3]))
+	previous := strings.ToLower(url.QueryEscape(path[len(path)-3]))
 
 	// Find and visit all links
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		// 以下の条件を満たす場合はスキップする
-		if strings.Contains(e.Attr("href"), previous) { return }
-		if strings.Contains(e.Attr("href"), "http") { return }
-		if !strings.Contains(e.Attr("href"), "/") { return }
+		if strings.Contains(e.Attr("href"), previous) {
+			return
+		}
+		if strings.Contains(e.Attr("href"), "http") {
+			return
+		}
+		if !strings.Contains(e.Attr("href"), "/") {
+			return
+		}
 
 		// リンクをたどる
 		e.Request.Visit(e.Attr("href"))
 	})
-	
+
 	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		// 以下の条件を満たす場合はスキップする
-		if !strings.Contains(e.Attr("href"), ".") { return }
+		if !strings.Contains(e.Attr("href"), ".") {
+			return
+		}
 
 		// URLをデコードする
 		u, err := url.QueryUnescape(e.Request.URL.String())
@@ -56,14 +57,14 @@ func Scraping(targetHost string) {
 		number := re.FindString(e.Attr("href"))
 
 		// _adobeStockの次の文字列を抽出する
-		tag := strings.Split(e.Attr("href"), "/")[3]
+		tag := strings.Split(u, "/")[3]
 
 		// 構造体に格納する
-		body := &Body{
-			Name: e.Attr("href"),
+		body := &domain.Body{
+			Name:   e.Attr("href"),
 			Number: number,
-			Path: u,
-			Tag: tag,
+			Path:   u,
+			Tag:    tag,
 		}
 		bodys = append(bodys, body)
 	})
@@ -81,7 +82,5 @@ func Scraping(targetHost string) {
 		log.Fatal(err)
 	}
 
-	// timeを出力する
-	elapsed := time.Since(start)
-	log.Printf("Scraping took %s", elapsed)
+	return bodys
 }
