@@ -1,0 +1,10 @@
+version: '3.9'
+
+services:
+  app:
+    build: .
+    container_name: app
+    volumes:
+      - ./:/go/src/app
+    ports:
+      - '1323:1323'
